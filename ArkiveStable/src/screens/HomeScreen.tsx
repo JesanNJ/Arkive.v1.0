@@ -21,9 +21,10 @@ type Props = {
     name: string;
     photo?: string;
   };
+  token?: string | null;
 };
 
-const HomeScreen = ({ onGoToEncryption, user }: Props) => {
+const HomeScreen = ({ onGoToEncryption, user, token }: Props) => {
 
   // 🔥 Greeting logic
   const getGreeting = () => {

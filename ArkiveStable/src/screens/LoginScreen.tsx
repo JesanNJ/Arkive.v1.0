@@ -7,16 +7,46 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import LoginBackground from '../components/LoginBackground';
 
 const { width } = Dimensions.get('window');
 
 type Props = {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (token: string) => void;
 };
 
 const LoginScreen = ({ onLoginSuccess }: Props) => {
+  React.useEffect(() => {
+    GoogleSignin.configure({
+      scopes: ['https://www.googleapis.com/auth/drive'],
+      webClientId: '208494516842-n7c44vo8rkqu03vfr1sfpepjtqrnb3u7.apps.googleusercontent.com', 
+    });
+  }, []);
+
+  const handleGoogleLogin = async () => {
+  try {
+    await GoogleSignin.hasPlayServices();
+
+   const userInfo: any = await GoogleSignin.signIn();
+    const tokens = await GoogleSignin.getTokens();
+
+    console.log("USER:", userInfo.user.name);
+    console.log("EMAIL:", userInfo.user.email);
+    console.log("TOKEN:", tokens.accessToken);
+
+    if (!tokens.accessToken) {
+      throw new Error("No access token received");
+    }
+
+    onLoginSuccess(tokens.accessToken);
+
+  } catch (error) {
+    console.log("LOGIN ERROR:", error);
+  }
+};
+
   return (
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
@@ -36,15 +66,11 @@ const LoginScreen = ({ onLoginSuccess }: Props) => {
           Security you can’t see. Protection you can feel
         </Text>
 
-        <TouchableOpacity style={styles.googleBtn} onPress={onLoginSuccess}>
+        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin}>
           <View style={styles.googleIconCircle}>
             <Text style={styles.googleIconText}>G</Text>
           </View>
           <Text style={styles.googleText}>Continue with Google</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.nextBtn} onPress={onLoginSuccess}>
-          <Text style={styles.nextText}>Go to Home →</Text>
         </TouchableOpacity>
       </View>
     </View>

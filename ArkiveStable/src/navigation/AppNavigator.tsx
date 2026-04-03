@@ -8,7 +8,7 @@ import EncryptionScreen from '../screens/EncryptionScreen';
 
 const AppNavigator = () => {
   const [route, setRoute] = useState('login');
-
+  const [token, setToken] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
 
@@ -16,14 +16,40 @@ const AppNavigator = () => {
     name: 'Jesan N J',
   };
 
+  const fetchDriveFiles = async (accessToken: string) => {
+    try {
+      const res = await fetch(
+        "https://www.googleapis.com/drive/v3/files",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      console.log("FILES:", data);
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleLoginSuccess = (accessToken: string) => {
+    setToken(accessToken);
+    fetchDriveFiles(accessToken);
+    setRoute('home');
+  };
+
   if (route === 'login') {
-    return <LoginScreen onLoginSuccess={() => setRoute('home')} />;
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
   if (route === 'home') {
     return (
       <HomeScreen
         user={user}
+        token={token}
         onGoToEncryption={(selectedFiles) => {
           setFiles(selectedFiles);
           setRoute('preview');
