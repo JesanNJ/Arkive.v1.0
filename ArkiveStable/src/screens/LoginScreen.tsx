@@ -14,52 +14,59 @@ import LoginBackground from '../components/LoginBackground';
 const { width } = Dimensions.get('window');
 
 type Props = {
-  onLoginSuccess: (token: string) => void;
+  onLoginSuccess: (data : {token: string , name: string}) => void;
 };
 
 const LoginScreen = ({ onLoginSuccess }: Props) => {
+
   React.useEffect(() => {
     GoogleSignin.configure({
       scopes: ['https://www.googleapis.com/auth/drive'],
-      webClientId: '208494516842-n7c44vo8rkqu03vfr1sfpepjtqrnb3u7.apps.googleusercontent.com', 
+      webClientId: '208494516842-n7c44vo8rkqu03vfr1sfpepjtqrnb3u7.apps.googleusercontent.com',
     });
   }, []);
 
-  const handleGoogleLogin = async () => {
+const handleGoogleLogin = async () => {
   try {
+    console.log("STEP 1: start");
+
+    await GoogleSignin.signOut(); // keep this for now
+    console.log("STEP 2: signed out");
+
     await GoogleSignin.hasPlayServices();
+    console.log("STEP 3: play services ok");
 
-   const userInfo: any = await GoogleSignin.signIn();
+    const userInfo: any = await GoogleSignin.signIn();
+    console.log("STEP 4: signin success", userInfo);
+
     const tokens = await GoogleSignin.getTokens();
+    console.log("STEP 5: tokens", tokens);
 
-    console.log("USER:", userInfo.user.name);
-    console.log("EMAIL:", userInfo.user.email);
-    console.log("TOKEN:", tokens.accessToken);
-
-    if (!tokens.accessToken) {
-      throw new Error("No access token received");
+    if (!tokens?.accessToken) {
+      throw new Error("No access token");
     }
 
-    onLoginSuccess(tokens.accessToken);
+    console.log("STEP 6: calling onLoginSuccess");
+
+    onLoginSuccess({
+      token: tokens.accessToken, 
+      name: userInfo?.data?.user?.name || 'User',
+    });
 
   } catch (error) {
     console.log("LOGIN ERROR:", error);
   }
 };
-
   return (
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
-      {/* Background */}
       <View style={StyleSheet.absoluteFillObject}>
         <LoginBackground />
       </View>
 
-      {/* Overlay */}
       <View style={styles.overlay} />
 
-      {/* Card */}
       <View style={styles.card}>
         <Text style={styles.title}>Arkive 🔒</Text>
         <Text style={styles.subtitle}>
@@ -131,15 +138,5 @@ const styles = StyleSheet.create({
   },
   googleText: {
     color: '#fff',
-  },
-  nextBtn: {
-    backgroundColor: '#1E7A85',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  nextText: {
-    color: '#fff',
-    fontWeight: '700',
   },
 });

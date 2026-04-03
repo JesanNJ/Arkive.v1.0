@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import FileListScreen from '../screens/FileListScreen';
@@ -11,9 +10,10 @@ const AppNavigator = () => {
   const [token, setToken] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
+  const [userName, setUserName] = useState("User");
 
   const user = {
-    name: 'Jesan N J',
+    name: userName,
   };
 
   const fetchDriveFiles = async (accessToken: string) => {
@@ -26,19 +26,27 @@ const AppNavigator = () => {
           },
         }
       );
-
       const data = await res.json();
-      console.log("FILES:", data);
-
+      console.log("DRIVE FILES:", data);
     } catch (err) {
-      console.log(err);
+      console.log("DRIVE ERROR:", err);
     }
   };
 
-  const handleLoginSuccess = (accessToken: string) => {
-    setToken(accessToken);
-    fetchDriveFiles(accessToken);
+  const handleLoginSuccess = ({ token, name }: { token: string; name: string }) => {
+    console.log("RECEIVED TOKEN:", token);
+    setUserName(name);
+    setToken(token);
+    fetchDriveFiles(token);
     setRoute('home');
+  };
+
+  // Simple logout - no persistence
+  const handleLogout = () => {
+    console.log("Logging out...");
+    setToken(null);
+    setUserName('User');
+    setRoute('login');
   };
 
   if (route === 'login') {
@@ -50,6 +58,7 @@ const AppNavigator = () => {
       <HomeScreen
         user={user}
         token={token}
+        onLogout={handleLogout}
         onGoToEncryption={(selectedFiles) => {
           setFiles(selectedFiles);
           setRoute('preview');
