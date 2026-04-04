@@ -7,44 +7,71 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import LoginBackground from '../components/LoginBackground';
 
 const { width } = Dimensions.get('window');
 
 type Props = {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (data : {token: string , name: string}) => void;
 };
 
 const LoginScreen = ({ onLoginSuccess }: Props) => {
+
+
+const handleGoogleLogin = async () => {
+  try {
+    console.log("STEP 1: start");
+
+    await GoogleSignin.signOut(); // keep this for now
+    console.log("STEP 2: signed out");
+
+    await GoogleSignin.hasPlayServices();
+    console.log("STEP 3: play services ok");
+
+    const userInfo: any = await GoogleSignin.signIn();
+    console.log("STEP 4: signin success", userInfo);
+
+    const tokens = await GoogleSignin.getTokens();
+    console.log("STEP 5: tokens", tokens);
+
+    if (!tokens?.accessToken) {
+      throw new Error("No access token");
+    }
+
+    console.log("STEP 6: calling onLoginSuccess");
+
+    onLoginSuccess({
+      token: tokens.accessToken, 
+      name: userInfo?.data?.user?.name || 'User',
+    });
+
+  } catch (error) {
+    console.log("LOGIN ERROR:", error);
+  }
+};
   return (
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
-      {/* Background */}
       <View style={StyleSheet.absoluteFillObject}>
         <LoginBackground />
       </View>
 
-      {/* Overlay */}
       <View style={styles.overlay} />
 
-      {/* Card */}
       <View style={styles.card}>
         <Text style={styles.title}>Arkive 🔒</Text>
         <Text style={styles.subtitle}>
           Security you can’t see. Protection you can feel
         </Text>
 
-        <TouchableOpacity style={styles.googleBtn} onPress={onLoginSuccess}>
+        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin}>
           <View style={styles.googleIconCircle}>
             <Text style={styles.googleIconText}>G</Text>
           </View>
           <Text style={styles.googleText}>Continue with Google</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.nextBtn} onPress={onLoginSuccess}>
-          <Text style={styles.nextText}>Go to Home →</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -105,15 +132,5 @@ const styles = StyleSheet.create({
   },
   googleText: {
     color: '#fff',
-  },
-  nextBtn: {
-    backgroundColor: '#1E7A85',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  nextText: {
-    color: '#fff',
-    fontWeight: '700',
   },
 });

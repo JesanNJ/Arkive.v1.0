@@ -12,6 +12,7 @@ import {
 
 import DocumentPicker from 'react-native-document-picker';
 import LoginBackground from '../components/LoginBackground';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { width } = Dimensions.get('window');
 
@@ -21,9 +22,15 @@ type Props = {
     name: string;
     photo?: string;
   };
+  token?: string | null;
+  onLogout: () => void;
 };
 
-const HomeScreen = ({ onGoToEncryption, user }: Props) => {
+const HomeScreen = ({ onGoToEncryption, user, token, onLogout }: Props) => {
+
+ const handleLogout = () => {
+  onLogout(); // AppNavigator handles everything
+};
 
   // 🔥 Greeting logic
   const getGreeting = () => {
@@ -66,21 +73,26 @@ const HomeScreen = ({ onGoToEncryption, user }: Props) => {
       {/* Overlay */}
       <View style={styles.overlay} />
 
-      {/* 🔥 GLASS HEADER */}
-      <View style={styles.headerGlass}>
-        <Text style={styles.appName}>Arkive</Text>
+ {/* 🔥 GLASS HEADER */}
+<View style={styles.headerGlass}>
+  <Text style={styles.appName}>Arkive</Text>
 
-        <View style={styles.userRow}>
-          {user?.photo ? (
-            <Image source={{ uri: user.photo }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{firstLetter}</Text>
-            </View>
-          )}
-          <Text style={styles.username}>{firstName}</Text>
-        </View>
+  <View style={styles.userRow}>
+    {user?.photo ? (
+      <Image source={{ uri: user.photo }} style={styles.avatarImage} />
+    ) : (
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{firstLetter}</Text>
       </View>
+    )}
+    <Text style={styles.username}>{firstName}</Text>
+    
+    {/* 🔥 ADD LOGOUT BUTTON */}
+    <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+      <Text style={styles.logoutText}>Logout</Text>
+    </TouchableOpacity>
+  </View>
+</View>
 
       {/* 🔥 GREETING */}
       <View style={styles.greetingBox}>
@@ -254,4 +266,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
+
+  logoutBtn: {
+  marginLeft: 12,
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 8,
+  backgroundColor: 'rgba(255,100,100,0.2)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,100,100,0.3)',
+},
+
+logoutText: {
+  color: '#ff6b6b',
+  fontSize: 12,
+  fontWeight: '600',
+},
 });
