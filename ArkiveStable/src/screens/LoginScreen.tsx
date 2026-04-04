@@ -19,12 +19,6 @@ type Props = {
 
 const LoginScreen = ({ onLoginSuccess }: Props) => {
 
-  React.useEffect(() => {
-    GoogleSignin.configure({
-      scopes: ['https://www.googleapis.com/auth/drive'],
-      webClientId: '208494516842-n7c44vo8rkqu03vfr1sfpepjtqrnb3u7.apps.googleusercontent.com',
-    });
-  }, []);
 
 const handleGoogleLogin = async () => {
   try {

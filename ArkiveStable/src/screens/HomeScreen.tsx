@@ -28,10 +28,9 @@ type Props = {
 
 const HomeScreen = ({ onGoToEncryption, user, token, onLogout }: Props) => {
 
-  const handleLogout = async () => {
-    await GoogleSignin.signOut();
-    onLogout(); // 🔥 THIS calls AppNavigator
-  };
+ const handleLogout = () => {
+  onLogout(); // AppNavigator handles everything
+};
 
   // 🔥 Greeting logic
   const getGreeting = () => {

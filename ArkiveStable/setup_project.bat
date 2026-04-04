@@ -38,6 +38,7 @@ echo  * crypto-js                    : 4.2.0
 echo  * react-native-keychain        : 8.1.3
 echo  * react-native-fs              : 2.20.0
 echo  * react-native-share           : 8.2.1
+echo  * @react-native-async-storage/async-storage : 1.19.8
 echo -----------------------------------------------------------------------
 echo.
 pause
