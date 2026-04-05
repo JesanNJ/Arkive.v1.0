@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import FileListScreen from '../screens/FileListScreen';
 import FileViewerScreen from '../screens/FileViewerScreen';
 import EncryptionScreen from '../screens/EncryptionScreen';
+import DecryptionScreen from '../screens/DecryptionScreen';
 
 // 🔥 CONFIGURE GOOGLE SIGN-IN ONCE AT APP STARTUP
 GoogleSignin.configure({
@@ -139,17 +140,18 @@ const AppNavigator = () => {
   }
 
   if (route === 'preview') {
-    return (
-      <FileListScreen
-        files={files}
-        onOpenFile={(file, index) => {
-          setActiveFileIndex(index);
-          setRoute('viewer');
-        }}
-        onEncrypt={() => setRoute('encrypt')}
-      />
-    );
-  }
+  return (
+    <FileListScreen
+      files={files}
+      onOpenFile={(file, index) => {
+        setActiveFileIndex(index);
+        setRoute('viewer');
+      }}
+      onEncrypt={() => setRoute('encrypt')}
+      onDecrypt={() => setRoute('decrypt')}  // 🔥 NEW
+    />
+  );
+}
 
   if (route === 'viewer') {
     return (
@@ -173,7 +175,19 @@ const AppNavigator = () => {
     );
   }
 
-  return null;
+  if (route === 'decrypt') {
+  return (
+    <DecryptionScreen
+      files={files}
+      onComplete={(decryptedFiles) => {
+        setFiles(decryptedFiles);
+        setRoute('viewer');
+      }}
+    />
+  );
+}
+
+return null;
 };
 
 export default AppNavigator;

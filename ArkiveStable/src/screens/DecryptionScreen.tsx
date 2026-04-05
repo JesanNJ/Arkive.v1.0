@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { generateAndStoreKey } from '../services/encryptionService';
-import { encryptFileInChunks } from '../services/chunkEncryptionService';
-
-import { saveEncryptedFile } from '../services/fileService';
+import { decryptFileInChunks } from '../services/chunkEncryptionService';
+import { getStoredKey } from '../services/encryptionService';
 
 type Props = {
   files: any[];
@@ -11,33 +9,37 @@ type Props = {
 };
 
 const messages = [
-  "Encrypting your files...",
-  "Securing your data...",
+  "Decrypting your files...",
+  "Restoring your data...",
   "Almost done...",
 ];
 
-const EncryptionScreen = ({ files, onComplete }: Props) => {
+const DecryptionScreen = ({ files, onComplete }: Props) => {
   const [progress, setProgress] = useState(0);
   const [index, setIndex] = useState(0);
-
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    processEncryption();
+    processDecryption();
   }, []);
 
-const processEncryption = async () => {
+const processDecryption = async () => {
   try {
-    const key = await generateAndStoreKey();
+    const key = await getStoredKey();
+
+    if (!key) {
+      console.log('❌ No encryption key found');
+      return;
+    }
+
     let outputFiles: any[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
-      const path = await encryptFileInChunks(
+      const { path, originalName } = await decryptFileInChunks(
         file.uri,
         key,
-        file.name,
         (chunkPercent) => {
           const overall = Math.round(
             ((i / files.length) + (chunkPercent / 100 / files.length)) * 100
@@ -48,8 +50,8 @@ const processEncryption = async () => {
 
       outputFiles.push({
         uri: 'file://' + path,
-        name: file.name + '.ark',
-        type: 'application/ark',
+        name: originalName,
+        type: file.type,
         size: file.size,
       });
     }
@@ -63,9 +65,10 @@ const processEncryption = async () => {
     }, 500);
 
   } catch (e) {
-    console.log('❌ Encryption Error:', e);
+    console.log('❌ Decryption Error:', e);
   }
 };
+
   useEffect(() => {
     const interval = setInterval(() => {
       Animated.timing(fadeAnim, {
@@ -74,7 +77,6 @@ const processEncryption = async () => {
         useNativeDriver: true,
       }).start(() => {
         setIndex((prev) => (prev + 1) % messages.length);
-
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 400,
@@ -88,8 +90,7 @@ const processEncryption = async () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Encrypting 🔐</Text>
-
+      <Text style={styles.title}>Decrypting 🔓</Text>
       <Animated.Text style={[styles.message, { opacity: fadeAnim }]}>
         {messages[index]}
       </Animated.Text>
@@ -103,7 +104,7 @@ const processEncryption = async () => {
   );
 };
 
-export default EncryptionScreen;
+export default DecryptionScreen;
 
 const styles = StyleSheet.create({
   container: {
