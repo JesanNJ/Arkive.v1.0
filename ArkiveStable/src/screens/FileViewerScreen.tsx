@@ -27,17 +27,45 @@ type Props = {
 const FileViewerScreen = ({ files, initialIndex = 0, onBack }: Props) => {
   const flatListRef = useRef<FlatList>(null);
 
-  // 📥 SAVE TO DOWNLOADS
+  // 📥 SAVE SINGLE FILE TO DOWNLOADS
   const saveToDownloads = async (file: any) => {
     try {
       const dest = `${RNFS.DownloadDirectoryPath}/${file.name}`;
-
       await RNFS.copyFile(file.uri.replace('file://', ''), dest);
-
       Alert.alert('✅ Saved', 'File saved to Downloads');
     } catch (e) {
       console.log(e);
       Alert.alert('❌ Error saving file');
+    }
+  };
+
+  // 📥 SAVE ALL FILES TO DOWNLOADS
+  const saveAllToDownloads = async () => {
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const file of files) {
+        try {
+          const dest = `${RNFS.DownloadDirectoryPath}/${file.name}`;
+          await RNFS.copyFile(file.uri.replace('file://', ''), dest);
+          successCount++;
+        } catch (e) {
+          console.log('Failed to save:', file.name, e);
+          failCount++;
+        }
+      }
+
+      if (failCount === 0) {
+        Alert.alert('✅ All Saved', `${successCount} file(s) saved to Downloads`);
+      } else {
+        Alert.alert(
+          '⚠️ Partial Save',
+          `${successCount} saved, ${failCount} failed`
+        );
+      }
+    } catch (e) {
+      Alert.alert('❌ Error saving files');
     }
   };
 
@@ -118,11 +146,20 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack }: Props) => {
 
   return (
     <View style={styles.container}>
+
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack}>
           <Text style={styles.back}>← Back</Text>
         </TouchableOpacity>
+
         <Text style={styles.headerTitle}>Preview</Text>
+
+        {files.length > 1 && (
+          <TouchableOpacity onPress={saveAllToDownloads} style={styles.saveAllBtn}>
+            <Text style={styles.saveAllText}>📥 Save All ({files.length})</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
@@ -133,6 +170,7 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack }: Props) => {
         renderItem={renderItem}
         keyExtractor={(_, index) => index.toString()}
       />
+
     </View>
   );
 };
@@ -140,15 +178,26 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack }: Props) => {
 export default FileViewerScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020c1b' },
+  container: {
+    flex: 1,
+    backgroundColor: '#020c1b',
+  },
 
   header: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
   },
 
-  back: { color: '#64ffda' },
-  headerTitle: { color: '#fff', marginLeft: 10 },
+  back: {
+    color: '#64ffda',
+  },
+
+  headerTitle: {
+    color: '#fff',
+    marginLeft: 10,
+    flex: 1,
+  },
 
   page: {
     width,
@@ -161,12 +210,21 @@ const styles = StyleSheet.create({
     height: '60%',
   },
 
-  info: { marginTop: 10 },
+  info: {
+    marginTop: 10,
+  },
 
-  fileName: { color: '#fff' },
-  fileMeta: { color: '#8892b0' },
+  fileName: {
+    color: '#fff',
+  },
 
-  noPreviewText: { color: '#8892b0' },
+  fileMeta: {
+    color: '#8892b0',
+  },
+
+  noPreviewText: {
+    color: '#8892b0',
+  },
 
   arkText: {
     color: '#64ffda',
@@ -187,5 +245,18 @@ const styles = StyleSheet.create({
 
   btnText: {
     color: '#fff',
+  },
+
+  saveAllBtn: {
+    backgroundColor: '#1E7A85',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  saveAllText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
