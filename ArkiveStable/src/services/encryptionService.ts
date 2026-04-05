@@ -1,19 +1,52 @@
 import CryptoJS from 'crypto-js';
 import * as Keychain from 'react-native-keychain';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEY_ALIAS = 'arkive_master_key';
 
 // 🔑 Generate key
-export const generateAndStoreKey = async () => {
-  const existing = await Keychain.getGenericPassword();
+export const generateAndStoreKey = async (): Promise<string> => {
+  try {
+    // Check if key already exists
+    let key = await AsyncStorage.getItem('encryptionKey');
+    
+    if (key) {
+      console.log('✅ Using existing encryption key');
+      return key;
+    }
+    
+    // Generate new key
+    key = CryptoJS.lib.WordArray.random(32).toString();
+    
+    // Store it
+    await AsyncStorage.setItem('encryptionKey', key);
+    console.log('✅ Generated and stored new encryption key');
+    
+    return key;
+  } catch (error) {
+    console.error('❌ Error generating/storing key:', error);
+    throw error;
+  }
+};
 
-  if (existing) return existing.password;
-
-  const key = CryptoJS.lib.WordArray.random(32).toString();
-
-  await Keychain.setGenericPassword(KEY_ALIAS, key);
-
-  return key;
+/**
+ * Get the stored encryption key
+ */
+export const getStoredKey = async (): Promise<string | null> => {
+  try {
+    const key = await AsyncStorage.getItem('encryptionKey');
+    
+    if (!key) {
+      console.log('⚠️ No encryption key found in storage');
+      return null;
+    }
+    
+    console.log('✅ Retrieved encryption key from storage');
+    return key;
+  } catch (error) {
+    console.error('❌ Error getting stored key:', error);
+    return null;
+  }
 };
 
 // 🔑 Get key
