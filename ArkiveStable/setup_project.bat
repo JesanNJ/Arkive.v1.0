@@ -35,6 +35,8 @@ echo  * react-native-vector-icons    : ^10.3.0
 echo  * react-native-video           : 5.2.1
 echo  * react-native-webview         : 11.26.0
 echo  * crypto-js                    : 4.2.0
+echo  * react-native-aes-crypto      : 3.1.0
+echo  * @types/crypto-js             : (devDependency)
 echo  * react-native-keychain        : 8.1.3
 echo  * react-native-fs              : 2.20.0
 echo  * react-native-share           : 8.2.1
