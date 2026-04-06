@@ -228,21 +228,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   previewImage: {
-    width: width - 40,
-    height: 200,
-    borderRadius: 12,
-    backgroundColor: '#112240',
-  },
-  previewBox: {
-    width: width - 40,
-    height: 200,
-    borderRadius: 12,
-    backgroundColor: '#112240',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(100,255,218,0.15)',
-  },
+  width: width - 40,
+  height: width, // 
+  borderRadius: 16,
+  backgroundColor: '#112240',
+},
+
+previewBox: {
+  width: width - 40,
+  height: width, // 
+  borderRadius: 16,
+  backgroundColor: '#112240',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderWidth: 1.5,
+  borderColor: 'rgba(100,255,218,0.25)',
+},
   previewIcon: {
     fontSize: 48,
     marginBottom: 8,
