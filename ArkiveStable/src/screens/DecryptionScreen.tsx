@@ -6,6 +6,7 @@ import { getStoredKey } from '../services/encryptionService';
 type Props = {
   files: any[];
   onComplete?: (files: any[]) => void;
+  onBackToHome?: () => void;
 };
 
 const messages = [
@@ -14,7 +15,7 @@ const messages = [
   "Almost done...",
 ];
 
-const DecryptionScreen = ({ files, onComplete }: Props) => {
+const DecryptionScreen = ({ files, onComplete, onBackToHome }: Props) => {
   const [progress, setProgress] = useState(0);
   const [index, setIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;

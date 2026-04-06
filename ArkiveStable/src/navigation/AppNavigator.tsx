@@ -8,7 +8,6 @@ import FileViewerScreen from '../screens/FileViewerScreen';
 import EncryptionScreen from '../screens/EncryptionScreen';
 import DecryptionScreen from '../screens/DecryptionScreen';
 
-// 🔥 CONFIGURE GOOGLE SIGN-IN ONCE AT APP STARTUP
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/drive'],
   webClientId: '208494516842-n7c44vo8rkqu03vfr1sfpepjtqrnb3u7.apps.googleusercontent.com',
@@ -16,17 +15,29 @@ GoogleSignin.configure({
 
 const AppNavigator = () => {
   const [route, setRoute] = useState<string>('login');
+  const [previousRoute, setPreviousRoute] = useState<string>('home');
   const [token, setToken] = useState<string | null>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [userName, setUserName] = useState("User");
+  const [userPhoto, setUserPhoto] = useState<string | undefined>(undefined);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   const user = {
     name: userName,
+    photo: userPhoto,
   };
 
-  // 🔥 CHECK FOR SAVED SESSION ON APP START
+  // Navigate with back tracking
+  const navigateTo = (newRoute: string) => {
+    setPreviousRoute(route);
+    setRoute(newRoute);
+  };
+
+  const goBack = () => {
+    setRoute(previousRoute);
+  };
+
   useEffect(() => {
     checkForSavedSession();
   }, []);
@@ -39,8 +50,6 @@ const AppNavigator = () => {
 
       if (savedToken && savedName) {
         console.log('✅ Found saved session!');
-        console.log('📝 Name:', savedName);
-        
         setToken(savedToken);
         setUserName(savedName);
         setRoute('home');
@@ -59,9 +68,7 @@ const AppNavigator = () => {
       const res = await fetch(
         "https://www.googleapis.com/drive/v3/files",
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
       const data = await res.json();
@@ -71,17 +78,10 @@ const AppNavigator = () => {
     }
   };
 
-  // 🔥 SAVE SESSION ON LOGIN
   const handleLoginSuccess = async ({ token, name }: { token: string; name: string }) => {
     try {
-      console.log("RECEIVED TOKEN:", token);
-      console.log("RECEIVED NAME:", name);
-
-      // Save to AsyncStorage
       await AsyncStorage.setItem('userToken', token);
       await AsyncStorage.setItem('userName', name);
-      console.log('✅ Session saved to storage');
-
       setUserName(name);
       setToken(token);
       fetchDriveFiles(token);
@@ -91,35 +91,20 @@ const AppNavigator = () => {
     }
   };
 
-  // 🔥 CLEAR SESSION ON LOGOUT
   const handleLogout = async () => {
     try {
-      console.log('🚪 Logging out...');
-
-      // Sign out from Google
       await GoogleSignin.signOut();
-      console.log('✅ Signed out from Google');
-
-      // Clear AsyncStorage
       await AsyncStorage.removeItem('userToken');
       await AsyncStorage.removeItem('userName');
-      console.log('✅ Session cleared from storage');
-
-      // Reset state
       setToken(null);
       setUserName('User');
       setRoute('login');
-      
-      console.log('✅ Logout complete');
     } catch (error) {
       console.log('❌ Error during logout:', error);
     }
   };
 
-  // Show nothing while checking for saved session
-  if (isCheckingSession) {
-    return null;
-  }
+  if (isCheckingSession) return null;
 
   if (route === 'login') {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
@@ -133,25 +118,26 @@ const AppNavigator = () => {
         onLogout={handleLogout}
         onGoToEncryption={(selectedFiles) => {
           setFiles(selectedFiles);
-          setRoute('preview');
+          navigateTo('preview');
         }}
       />
     );
   }
 
   if (route === 'preview') {
-  return (
-    <FileListScreen
-      files={files}
-      onOpenFile={(file, index) => {
-        setActiveFileIndex(index);
-        setRoute('viewer');
-      }}
-      onEncrypt={() => setRoute('encrypt')}
-      onDecrypt={() => setRoute('decrypt')}  // 🔥 NEW
-    />
-  );
-}
+    return (
+      <FileListScreen
+        files={files}
+        onOpenFile={(file, index) => {
+          setActiveFileIndex(index);
+          navigateTo('viewer');
+        }}
+        onEncrypt={() => navigateTo('encrypt')}
+        onDecrypt={() => navigateTo('decrypt')}
+        onBack={() => setRoute('home')}  // ← back to home
+      />
+    );
+  }
 
   if (route === 'viewer') {
     return (
@@ -159,6 +145,7 @@ const AppNavigator = () => {
         files={files}
         initialIndex={activeFileIndex}
         onBack={() => setRoute('preview')}
+        onBackToHome={() => setRoute('home')}
       />
     );
   }
@@ -176,18 +163,19 @@ const AppNavigator = () => {
   }
 
   if (route === 'decrypt') {
-  return (
-    <DecryptionScreen
-      files={files}
-      onComplete={(decryptedFiles) => {
-        setFiles(decryptedFiles);
-        setRoute('viewer');
-      }}
-    />
-  );
-}
+    return (
+      <DecryptionScreen
+        files={files}
+        onComplete={(decryptedFiles) => {
+          setFiles(decryptedFiles);
+          setRoute('viewer');
+        }}
+        onBackToHome={() => setRoute('home')}
+      />
+    );
+  }
 
-return null;
+  return null;
 };
 
 export default AppNavigator;
