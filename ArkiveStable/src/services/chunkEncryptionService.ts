@@ -99,7 +99,16 @@ export const decryptFileInChunks = async (
   try {
     console.log('🔓 Starting decryption');
 
-    const cleanUri = encryptedFileUri.replace('file://', '');
+    // Handle content:// URIs by copying to temp first
+let cleanUri: string;
+if (encryptedFileUri.startsWith('content://')) {
+  const tempPath = `${RNFS.CachesDirectoryPath}/temp_decrypt_${Date.now()}.ark`;
+  await RNFS.copyFile(encryptedFileUri, tempPath);
+  console.log('✅ Copied .ark to temp:', tempPath);
+  cleanUri = tempPath;
+} else {
+  cleanUri = encryptedFileUri.replace('file://', '');
+}
 
     // Read only the metadata portion first (first 500 bytes is enough)
     // The metadata is at the start of the file before the chunks array
