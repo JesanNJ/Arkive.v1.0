@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   View,
   Image,
-  FlatList,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 
 import RNFS from 'react-native-fs';
@@ -15,129 +15,91 @@ import Share from 'react-native-share';
 import Video from 'react-native-video';
 import { WebView } from 'react-native-webview';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-type Props = {
-  files: any[];
-  initialIndex?: number;
-  onBack: () => void;
-  onBackToHome: () => void;
-};
+const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => {
+  const flatListRef = useRef(null);
+  const scrollX = useRef(new Animated.Value(initialIndex * width)).current;
 
-const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }: Props) => {
-  const flatListRef = useRef<FlatList>(null);
-
-  // 📥 SAVE SINGLE FILE
-  const saveToDownloads = async (file: any) => {
+  // 📥 SAVE SINGLE
+  const saveToDownloads = async (file) => {
     try {
       const dest = `${RNFS.DownloadDirectoryPath}/${file.name}`;
       await RNFS.copyFile(file.uri.replace('file://', ''), dest);
-      Alert.alert('✅ Saved', 'File saved to Downloads');
-    } catch (e) {
-      console.log(e);
+      Alert.alert('✅ Saved');
+    } catch {
       Alert.alert('❌ Error saving file');
     }
   };
 
-  // 📥 SAVE ALL FILES
+  // 📥 SAVE ALL
   const saveAllToDownloads = async () => {
     try {
-      let successCount = 0;
-      let failCount = 0;
-
       for (const file of files) {
-        try {
-          const dest = `${RNFS.DownloadDirectoryPath}/${file.name}`;
-          await RNFS.copyFile(file.uri.replace('file://', ''), dest);
-          successCount++;
-        } catch (e) {
-          console.log('Failed to save:', file.name, e);
-          failCount++;
-        }
+        const dest = `${RNFS.DownloadDirectoryPath}/${file.name}`;
+        await RNFS.copyFile(file.uri.replace('file://', ''), dest);
       }
-
-      if (failCount === 0) {
-        Alert.alert('✅ All Saved', `${successCount} file(s) saved to Downloads`);
-      } else {
-        Alert.alert('⚠️ Partial Save', `${successCount} saved, ${failCount} failed`);
-      }
-    } catch (e) {
+      Alert.alert('✅ All files saved');
+    } catch {
       Alert.alert('❌ Error saving files');
     }
   };
 
-  // ☁️ SHARE
-  const shareFile = async (file: any) => {
+  const shareFile = async (file) => {
     try {
-      await Share.open({
-        url: file.uri,
-        type: file.type,
-      });
-    } catch (e) {
-      console.log(e);
-    }
+      await Share.open({ url: file.uri, type: file.type });
+    } catch {}
   };
 
-  const renderItem = ({ item }: any) => {
-    const fileType = item.type || '';
+  const renderItem = ({ item }) => {
+    const type = item.type || '';
     const uri = item.uri;
 
-    const isArk = fileType === 'application/ark' || item.name.endsWith('.ark');
-    const isImage = fileType.startsWith('image/');
-    const isVideo = fileType.startsWith('video/');
-    const isPDF = fileType.includes('pdf');
+    const isArk = item.name.endsWith('.ark');
+    const isImage = type.startsWith('image/');
+    const isVideo = type.startsWith('video/');
+    const isPDF = type.includes('pdf');
 
     return (
       <View style={styles.page}>
 
-        {isArk && (
-          <View style={styles.arkContainer}>
-            <Text style={styles.arkIcon}>🔐</Text>
-            <Text style={styles.arkText}>Encrypted .ark file</Text>
-            <Text style={styles.arkSubText}>Decrypt to view contents</Text>
-          </View>
-        )}
+        {/* 🔥 TRUE CENTER (NOT FLEX 1 TRICK) */}
+        <View style={styles.centerBlock}>
 
-        {isImage && (
-          <Image source={{ uri }} style={styles.preview} resizeMode="contain" />
-        )}
+          {isArk && (
+            <View style={styles.arkContainer}>
+              <Text style={styles.arkIcon}>🔐</Text>
+              <Text style={styles.arkText}>Encrypted .ark file</Text>
+            </View>
+          )}
 
-        {isVideo && (
-          <Video source={{ uri }} style={styles.preview} controls />
-        )}
+          {isImage && <Image source={{ uri }} style={styles.preview} resizeMode="contain" />}
+          {isVideo && <Video source={{ uri }} style={styles.preview} controls />}
+          {isPDF && <WebView source={{ uri }} style={styles.preview} />}
 
-        {isPDF && (
-          <WebView source={{ uri }} style={styles.preview} />
-        )}
+          {!isImage && !isVideo && !isPDF && !isArk && (
+            <View style={styles.noPreviewContainer}>
+              <Text style={styles.noPreviewIcon}>📁</Text>
+              <Text style={styles.noPreviewText}>Preview not available</Text>
+            </View>
+          )}
 
-        {!isImage && !isVideo && !isPDF && !isArk && (
-          <View style={styles.noPreviewContainer}>
-            <Text style={styles.noPreviewIcon}>📁</Text>
-            <Text style={styles.noPreviewText}>Preview not available</Text>
-          </View>
-        )}
-
-        {/* FILE INFO */}
-        <View style={styles.info}>
-          <Text style={styles.fileName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.fileMeta}>{(item.size / 1024).toFixed(2)} KB</Text>
         </View>
 
-        {/* ACTION BUTTONS */}
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => saveToDownloads(item)}
-          >
-            <Text style={styles.btnText}>📥 Save</Text>
-          </TouchableOpacity>
+        {/* 🔥 INFO + ACTIONS (MOVED UP) */}
+        <View style={styles.bottomBlock}>
+          <Text style={styles.fileName}>{item.name}</Text>
+          <Text style={styles.fileMeta}>{(item.size / 1024).toFixed(2)} KB</Text>
 
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => shareFile(item)}
-          >
-            <Text style={styles.btnText}>☁️ Share</Text>
-          </TouchableOpacity>
+          <View style={styles.actions}>
+            <TouchableOpacity style={styles.btn} onPress={() => saveToDownloads(item)}>
+              <Text style={styles.btnText}>📥 Save</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btn} onPress={() => shareFile(item)}>
+              <Text style={styles.btnText}>☁️ Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
       </View>
@@ -147,42 +109,74 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }: Pro
   return (
     <View style={styles.container}>
 
-      {/* HEADER */}
+      {/* 🔥 HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.headerBtn}>
+        <TouchableOpacity onPress={onBack}>
           <Text style={styles.back}>← Back</Text>
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Preview</Text>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity onPress={onBackToHome} style={styles.homeBtn}>
-            <Text style={styles.homeBtnText}>🏠 Home</Text>
+          <TouchableOpacity style={styles.headerBtn} onPress={onBackToHome}>
+            <Text style={styles.homeIcon}>🏠</Text>
+            <Text style={styles.homeText}>Home</Text>
           </TouchableOpacity>
 
           {files.length > 1 && (
-            <TouchableOpacity onPress={saveAllToDownloads} style={styles.saveAllBtn}>
-              <Text style={styles.saveAllText}>📥 Save All ({files.length})</Text>
+            <TouchableOpacity style={styles.headerBtn} onPress={saveAllToDownloads}>
+              <Text style={styles.homeIcon}>📥</Text>
+              <Text style={styles.homeText}>All</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      <FlatList
+      {/* 🔥 SWIPE VIEW */}
+      <Animated.FlatList
         ref={flatListRef}
         data={files}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
+        keyExtractor={(_, i) => i.toString()}
         renderItem={renderItem}
-        keyExtractor={(_, index) => index.toString()}
         initialScrollIndex={initialIndex}
         getItemLayout={(_, index) => ({
           length: width,
           offset: width * index,
           index,
         })}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
       />
+
+      {/* 🔥 DOTS */}
+      <View style={styles.pagination}>
+        {files.map((_, index) => {
+          const inputRange = [
+            (index - 1) * width,
+            index * width,
+            (index + 1) * width,
+          ];
+
+          const dotWidth = scrollX.interpolate({
+            inputRange,
+            outputRange: [6, 20, 6],
+            extrapolate: 'clamp',
+          });
+
+          return (
+            <Animated.View
+              key={index}
+              style={[styles.dot, { width: dotWidth }]}
+            />
+          );
+        })}
+      </View>
 
     </View>
   );
@@ -195,6 +189,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#020c1b',
   },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -203,13 +198,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(100,255,218,0.1)',
   },
-  headerBtn: {
-    minWidth: 60,
-  },
+
   back: {
     color: '#64ffda',
     fontSize: 15,
   },
+
   headerTitle: {
     color: '#fff',
     flex: 1,
@@ -217,108 +211,123 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    minWidth: 60,
-    justifyContent: 'flex-end',
+    gap: 10,
   },
-  homeBtn: {
-    backgroundColor: 'rgba(100,255,218,0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#64ffda',
+
+  headerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  homeBtnText: {
+
+  homeIcon: {
+    fontSize: 14,
+    color: '#64ffda',
+  },
+
+  homeText: {
     color: '#64ffda',
     fontSize: 12,
     fontWeight: '600',
   },
-  saveAllBtn: {
-    backgroundColor: '#1E7A85',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  saveAllText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-  },
+
   page: {
     width,
+    height: height * 0.8,
+    alignItems: 'center',
+  },
+
+  // 🔥 REAL CENTER
+  centerBlock: {
+    position: 'absolute',
+    top: height * 0.2,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
   },
+
   preview: {
-    width: '100%',
-    height: '55%',
+    width: width * 0.9,
+    height: width * 0.9,
   },
+
   arkContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    height: '55%',
   },
+
   arkIcon: {
-    fontSize: 64,
-    marginBottom: 12,
+    fontSize: 70,
   },
+
   arkText: {
     color: '#64ffda',
     fontSize: 18,
-    fontWeight: '600',
+    marginTop: 10,
   },
-  arkSubText: {
-    color: '#8892b0',
-    fontSize: 13,
-    marginTop: 6,
-  },
+
   noPreviewContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    height: '55%',
   },
+
   noPreviewIcon: {
-    fontSize: 48,
-    marginBottom: 12,
+    fontSize: 50,
   },
+
   noPreviewText: {
     color: '#8892b0',
-    fontSize: 15,
   },
-  info: {
-    marginTop: 16,
+
+  // 🔥 MOVED UP
+  bottomBlock: {
+    position: 'absolute',
+    bottom: 80,
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
+
   fileName: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '600',
     textAlign: 'center',
   },
+
   fileMeta: {
     color: '#8892b0',
     fontSize: 12,
     marginTop: 4,
   },
+
   actions: {
     flexDirection: 'row',
-    marginTop: 24,
+    marginTop: 16,
     gap: 12,
   },
+
   btn: {
     backgroundColor: '#1E7A85',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
     borderRadius: 12,
   },
+
   btnText: {
     color: '#fff',
     fontWeight: '600',
+  },
+
+  pagination: {
+    position: 'absolute',
+    bottom: 30,
+    flexDirection: 'row',
+    alignSelf: 'center',
+  },
+
+  dot: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#64ffda',
+    marginHorizontal: 4,
   },
 });

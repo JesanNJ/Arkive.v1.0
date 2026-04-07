@@ -14,7 +14,7 @@ import {
 // @ts-ignore
 import Video from 'react-native-video';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 type Props = {
   files: any[];
@@ -76,7 +76,7 @@ const FileListScreen = ({ files, setFiles, onEncrypt, onDecrypt, onOpenFile, onB
       return (
         <View style={styles.previewBox}>
           <Text style={styles.previewIcon}>📄</Text>
-          <Text style={styles.previewLabel}>PDF Document</Text>
+          <Text style={styles.previewLabel}>PDF File</Text>
         </View>
       );
     }
@@ -108,6 +108,7 @@ const FileListScreen = ({ files, setFiles, onEncrypt, onDecrypt, onOpenFile, onB
         <TouchableOpacity onPress={onBack} style={styles.headerSide} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={styles.backBtn}>← Back</Text>
         </TouchableOpacity>
+
         <Text style={styles.title}>Selected Files</Text>
         <TouchableOpacity onPress={handleAddFile} style={styles.headerSide} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={styles.addBtn}>+</Text>
