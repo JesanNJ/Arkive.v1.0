@@ -112,15 +112,26 @@ const AppNavigator = () => {
 
   if (route === 'home') {
     return (
-      <HomeScreen
-        user={user}
-        token={token}
-        onLogout={handleLogout}
-        onGoToEncryption={(selectedFiles) => {
-          setFiles(selectedFiles);
-          navigateTo('preview');
-        }}
-      />
+     <HomeScreen
+  user={user}
+  token={token}
+  onLogout={handleLogout}
+
+  onGoToEncryption={(files) => {
+    setFiles(files);
+    navigateTo('preview');
+  }}
+
+  onGoToDecryption={(files) => {
+    setFiles(files);
+    navigateTo('decrypt');
+  }}
+
+  onGoToViewer={(files) => {
+    setFiles(files);
+    navigateTo('viewer');
+  }}
+/>
     );
   }
 

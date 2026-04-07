@@ -13,7 +13,6 @@ import {
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import Video from 'react-native-video';
-import { WebView } from 'react-native-webview';
 
 const { width, height } = Dimensions.get('window');
 
@@ -56,9 +55,17 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => 
     const uri = item.uri;
 
     const isArk = item.name.endsWith('.ark');
-    const isImage = type.startsWith('image/');
-    const isVideo = type.startsWith('video/');
-    const isPDF = type.includes('pdf');
+    const isImage =
+  type.startsWith('image/') ||
+  item.name.match(/\.(jpg|jpeg|png)$/i);
+
+const isVideo =
+  type.startsWith('video/') ||
+  item.name.match(/\.(mp4|mov)$/i);
+
+const isPDF =
+  type.includes('pdf') ||
+  item.name.match(/\.pdf$/i);
 
     return (
       <View style={styles.page}>
@@ -75,8 +82,47 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => 
 
           {isImage && <Image source={{ uri }} style={styles.preview} resizeMode="contain" />}
           {isVideo && <Video source={{ uri }} style={styles.preview} controls />}
-          {isPDF && <WebView source={{ uri }} style={styles.preview} />}
 
+       {isPDF && (
+  <View style={styles.noPreviewContainer}>
+    <Text style={styles.noPreviewIcon}>📄</Text>
+
+    <Text style={styles.noPreviewText}>
+      PDF preview not supported inside app
+    </Text>
+
+    <TouchableOpacity
+      style={styles.btn}
+      onPress={() => shareFile(item)}
+    >
+      <Text style={styles.btnText}>📂 Open PDF</Text>
+    </TouchableOpacity>
+  </View>
+)}
+
+
+
+        {/* FILE INFO */}
+       <View style={styles.info}>
+  <Text style={styles.fileName} numberOfLines={2}>
+    {item.name}
+  </Text>
+
+  <Text style={styles.fileMeta}>
+  {item.size
+    ? (() => {
+        const sizeNum = parseInt(item.size); // handles "75238 bytes"
+        if (isNaN(sizeNum)) return 'Unknown size';
+
+if (sizeNum > 1024 * 1024) {
+  return `${(sizeNum / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+return `${(sizeNum / 1024).toFixed(2)} KB`;
+      })()
+    : 'Unknown size'}
+</Text>
+</View>
           {!isImage && !isVideo && !isPDF && !isArk && (
             <View style={styles.noPreviewContainer}>
               <Text style={styles.noPreviewIcon}>📁</Text>
@@ -89,7 +135,7 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => 
         {/* 🔥 INFO + ACTIONS (MOVED UP) */}
         <View style={styles.bottomBlock}>
           <Text style={styles.fileName}>{item.name}</Text>
-          <Text style={styles.fileMeta}>{(item.size / 1024).toFixed(2)} KB</Text>
+          
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.btn} onPress={() => saveToDownloads(item)}>

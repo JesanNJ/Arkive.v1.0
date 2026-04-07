@@ -64,3 +64,11 @@ yarn-error.log
 
 # testing
 /coverage
+
+# Extra fixes (important)
+android/.gradle/
+android/build/
+.gradle/
+*.log
+package-lock.json
+yarn.lock

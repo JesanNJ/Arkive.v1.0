@@ -1,3 +1,4 @@
+import { addFileToHistory } from '../services/storageService';  
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { generateAndStoreKey } from '../services/encryptionService';
@@ -46,12 +47,26 @@ const processEncryption = async () => {
         }
       );
 
-      outputFiles.push({
-        uri: 'file://' + path,
-        name: file.name + '.ark',
-        type: 'application/ark',
-        size: file.size,
-      });
+      const encryptedFile = {
+  uri: 'file://' + path,
+  name: file.name + '.ark',
+  type: 'application/ark',
+  size: file.size,
+};
+
+outputFiles.push(encryptedFile);
+
+// 🔥 ADD THIS (history storage)
+await addFileToHistory({
+  id: Date.now().toString(),
+  name: encryptedFile.name,
+  size: file.size || 0,
+  uri: encryptedFile.uri,
+  status: 'encrypted',
+  timestamp: Date.now(),
+});
+
+console.log("✅ Saved to history:", encryptedFile.name);
     }
 
     setTimeout(() => {
