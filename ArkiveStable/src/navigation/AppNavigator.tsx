@@ -128,6 +128,7 @@ const AppNavigator = () => {
     return (
       <FileListScreen
         files={files}
+        setFiles={(newFiles) => setFiles([...newFiles])}
         onOpenFile={(file, index) => {
           setActiveFileIndex(index);
           navigateTo('viewer');
