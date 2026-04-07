@@ -1860,7 +1860,7 @@
     deepmerge "^4.3.1"
     svgo "^3.0.2"
 
-"@tsconfig/react-native@^3.0.0":
+"@tsconfig/react-native@^3.0.9":
   version "3.0.9"
   resolved "https://registry.npmjs.org/@tsconfig/react-native/-/react-native-3.0.9.tgz"
   integrity sha512-+PuvMuxb0OTHo/o04vEQI7LfUoiPH33pePvAH+qxf5ZPsRAVwtespj7LqysOTAYcsmRvjLPjik7V8pIcm84dEQ==
@@ -1946,6 +1946,13 @@
   resolved "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.15.tgz"
   integrity sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==
 
+"@types/react-native-video@^5.0.21":
+  version "5.0.21"
+  resolved "https://registry.npmjs.org/@types/react-native-video/-/react-native-video-5.0.21.tgz"
+  integrity sha512-6C/9uv12x+QNAjbYFKUWciwSIksNj+xhL8/EZXIN+H/bHYmSMWKZ1oxfIrd+IfXx3edcDZmyR3ByY7r4ptxZow==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react-test-renderer@^18.0.0":
   version "18.3.1"
   resolved "https://registry.npmjs.org/@types/react-test-renderer/-/react-test-renderer-18.3.1.tgz"
@@ -1953,7 +1960,7 @@
   dependencies:
     "@types/react" "^18"
 
-"@types/react@^18", "@types/react@^18.0.24":
+"@types/react@*", "@types/react@^18", "@types/react@^18.0.24":
   version "18.3.28"
   resolved "https://registry.npmjs.org/@types/react/-/react-18.3.28.tgz"
   integrity sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==
@@ -6276,7 +6283,7 @@ react-native-vector-icons@^10.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-react-native-video@5.2.1:
+react-native-video@^5.2.1:
   version "5.2.1"
   resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-5.2.1.tgz"
   integrity sha512-aJlr9MeTuQ0LpZ4n+EC9RvhoKeiPbLtI2Rxy8u7zo/wzGevbRpWHSBj9xZ5YDBXnAVXzuqyNIkGhdw7bfdIBZw==
