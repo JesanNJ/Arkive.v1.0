@@ -125,19 +125,20 @@ const AppNavigator = () => {
   }
 
   if (route === 'preview') {
-    return (
-      <FileListScreen
-        files={files}
-        onOpenFile={(file, index) => {
-          setActiveFileIndex(index);
-          navigateTo('viewer');
-        }}
-        onEncrypt={() => navigateTo('encrypt')}
-        onDecrypt={() => navigateTo('decrypt')}
-        onBack={() => setRoute('home')}  // ← back to home
-      />
-    );
-  }
+  return (
+    <FileListScreen
+      files={files}
+      setFiles={setFiles} // 🔥 THIS FIXES EVERYTHING
+      onOpenFile={(file, index) => {
+        setActiveFileIndex(index);
+        navigateTo('viewer');
+      }}
+      onEncrypt={() => navigateTo('encrypt')}
+      onDecrypt={() => navigateTo('decrypt')}
+      onBack={() => setRoute('home')}
+    />
+  );
+}
 
   if (route === 'viewer') {
     return (
