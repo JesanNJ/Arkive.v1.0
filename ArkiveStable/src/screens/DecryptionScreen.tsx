@@ -1,3 +1,4 @@
+import { addFileToHistory } from '../services/storageService';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { decryptFileInChunks } from '../services/chunkEncryptionService';
@@ -49,12 +50,24 @@ const processDecryption = async () => {
         }
       );
 
-      outputFiles.push({
-        uri: 'file://' + path,
-        name: originalName,
-        type: file.type,
-        size: file.size,
-      });
+     const decryptedFile = {
+  uri: 'file://' + path,
+  name: originalName,
+  type: file.type,
+  size: file.size,
+};
+
+outputFiles.push(decryptedFile);
+
+// 🔥 ADD THIS (history update)
+await addFileToHistory({
+  id: Date.now().toString(),
+  name: originalName, // keep same name reference
+  size: `${file.size} bytes`,
+  uri: 'file://' + path,// ⚠️ VERY IMPORTANT (same encrypted URI)
+  status: 'decrypted',
+  timestamp: Date.now(),
+});
     }
 
     setTimeout(() => {

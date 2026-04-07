@@ -13,7 +13,6 @@ import {
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import Video from 'react-native-video';
-import { WebView } from 'react-native-webview';
 
 const { width } = Dimensions.get('window');
 
@@ -83,9 +82,17 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }: Pro
     const uri = item.uri;
 
     const isArk = fileType === 'application/ark' || item.name.endsWith('.ark');
-    const isImage = fileType.startsWith('image/');
-    const isVideo = fileType.startsWith('video/');
-    const isPDF = fileType.includes('pdf');
+    const isImage =
+  fileType.startsWith('image/') ||
+  item.name.match(/\.(jpg|jpeg|png)$/i);
+
+const isVideo =
+  fileType.startsWith('video/') ||
+  item.name.match(/\.(mp4|mov)$/i);
+
+const isPDF =
+  fileType.includes('pdf') ||
+  item.name.match(/\.pdf$/i);
 
     return (
       <View style={styles.page}>
@@ -106,22 +113,46 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }: Pro
           <Video source={{ uri }} style={styles.preview} controls />
         )}
 
-        {isPDF && (
-          <WebView source={{ uri }} style={styles.preview} />
-        )}
+       {isPDF && (
+  <View style={styles.noPreviewContainer}>
+    <Text style={styles.noPreviewIcon}>📄</Text>
 
-        {!isImage && !isVideo && !isPDF && !isArk && (
-          <View style={styles.noPreviewContainer}>
-            <Text style={styles.noPreviewIcon}>📁</Text>
-            <Text style={styles.noPreviewText}>Preview not available</Text>
-          </View>
-        )}
+    <Text style={styles.noPreviewText}>
+      PDF preview not supported inside app
+    </Text>
+
+    <TouchableOpacity
+      style={styles.btn}
+      onPress={() => shareFile(item)}
+    >
+      <Text style={styles.btnText}>📂 Open PDF</Text>
+    </TouchableOpacity>
+  </View>
+)}
+
+
 
         {/* FILE INFO */}
-        <View style={styles.info}>
-          <Text style={styles.fileName} numberOfLines={2}>{item.name}</Text>
-          <Text style={styles.fileMeta}>{(item.size / 1024).toFixed(2)} KB</Text>
-        </View>
+       <View style={styles.info}>
+  <Text style={styles.fileName} numberOfLines={2}>
+    {item.name}
+  </Text>
+
+  <Text style={styles.fileMeta}>
+  {item.size
+    ? (() => {
+        const sizeNum = parseInt(item.size); // handles "75238 bytes"
+        if (isNaN(sizeNum)) return 'Unknown size';
+
+if (sizeNum > 1024 * 1024) {
+  return `${(sizeNum / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+return `${(sizeNum / 1024).toFixed(2)} KB`;
+      })()
+    : 'Unknown size'}
+</Text>
+</View>
 
         {/* ACTION BUTTONS */}
         <View style={styles.actions}>

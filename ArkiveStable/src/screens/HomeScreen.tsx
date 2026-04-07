@@ -1,4 +1,6 @@
-import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getStoredFiles } from '../services/storageService';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,8 +18,11 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { width } = Dimensions.get('window');
 
+
 type Props = {
   onGoToEncryption: (files: any) => void;
+  onGoToDecryption: (files: any) => void;   // ✅ ADD THIS
+  onGoToViewer: (files: any) => void;       // ✅ ADD THIS
   user: {
     name: string;
     photo?: string;
@@ -26,12 +31,73 @@ type Props = {
   onLogout: () => void;
 };
 
-const HomeScreen = ({ onGoToEncryption, user, token, onLogout }: Props) => {
+const HomeScreen = ({
+  onGoToEncryption,
+  onGoToDecryption,
+  onGoToViewer,
+  user,
+  token,
+  onLogout
+}: Props) => {
+const handleFilePress = (file) => {
+  console.log('CLICKED FILE:', file);
 
+  if (file?.status === 'encrypted') {
+    Alert.alert(
+      'Encrypted File',
+      file.name + '\n\nWhat do you want to do?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Decrypt',
+          onPress: () => onGoToDecryption([file]),
+        },
+      ]
+    );
+  } else {
+    Alert.alert(
+      'Decrypted File',
+      file.name + '\n\nWhat do you want to do?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Open',
+          onPress: () => onGoToViewer([file]), // ✅ THIS MUST USE DECRYPTED FILE
+        },
+        {
+          text: 'Re-encrypt',
+          onPress: () => onGoToEncryption([file]),
+        },
+      ]
+    );
+  }
+};
+  const [historyFiles, setHistoryFiles] = useState([]);
+  const uniqueFiles = Object.values(
+  historyFiles.reduce((acc, file) => {
+    const baseName = file.name.replace('.ark', '');
+
+    if (
+      !acc[baseName] ||
+      acc[baseName].timestamp < file.timestamp
+    ) {
+      acc[baseName] = file;
+    }
+
+    return acc;
+  }, {})
+);
+  const loadHistory = async () => {
+  const files = await getStoredFiles();
+  setHistoryFiles(files);
+  console.log("History:", files); // temporary debug
+};
+useEffect(() => {
+  loadHistory();
+}, []);
  const handleLogout = () => {
   onLogout(); // AppNavigator handles everything
 };
-
   // 🔥 Greeting logic
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -105,6 +171,8 @@ const HomeScreen = ({ onGoToEncryption, user, token, onLogout }: Props) => {
       <View style={styles.uploadGlass}>
         <Text style={styles.sectionTitle}>Secure Upload</Text>
 
+        
+
         <TouchableOpacity style={styles.bigBtn} onPress={pickFile}>
           <Text style={styles.bigBtnText}>Select File / Files</Text>
         </TouchableOpacity>
@@ -114,7 +182,28 @@ const HomeScreen = ({ onGoToEncryption, user, token, onLogout }: Props) => {
           Your files are protected using AES encryption — secured on your device before upload.
         </Text>
       </View>
+      <View style={styles.historyGlass}>
+  <Text style={styles.sectionTitle}>Recent Files</Text>
 
+  {uniqueFiles.length === 0 ? (
+    <Text style={styles.emptyText}>No recent files</Text>
+  ) : (
+    uniqueFiles.slice(0, 5).map((file, index) => (
+      <TouchableOpacity
+        key={index}
+        style={styles.fileItem}
+        onPress={() => handleFilePress(file)}
+      >
+        <Text style={styles.fileName} numberOfLines={1}>
+  {file.name}
+</Text>
+        <Text style={styles.fileStatus}>
+          {file.status === 'encrypted' ? '🔒 Encrypted' : '📂 Decrypted'}
+        </Text>
+      </TouchableOpacity>
+    ))
+  )}
+</View>
       {/* 🔥 FOOTER */}
       <View style={styles.footer}>
         <Text style={styles.quote}>Your legacy, encrypted.</Text>
@@ -129,6 +218,44 @@ const HomeScreen = ({ onGoToEncryption, user, token, onLogout }: Props) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  historyGlass: {
+  marginTop: 20,
+  marginHorizontal: 20,
+  paddingVertical: 20,
+  paddingHorizontal: 16,
+  borderRadius: 25,
+
+  backgroundColor: 'rgba(255,255,255,0.05)',
+  borderWidth: 1,
+  borderColor: 'rgba(100,255,218,0.15)',
+},
+
+fileItem: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginTop: 12,
+  paddingVertical: 8,
+  borderBottomWidth: 0.5,
+  borderBottomColor: 'rgba(255,255,255,0.08)',
+},
+
+fileName: {
+  color: '#e6f1ff',
+  fontSize: 14,
+  flex: 1,              // 🔥 THIS FIXES ALIGNMENT
+  marginRight: 10,
+},
+
+fileStatus: {
+  color: '#64ffda',
+  fontSize: 12,
+  fontWeight: '600',
+},
+emptyText: {
+  color: '#8892b0',
+  marginTop: 10,
+},
   container: {
     flex: 1,
     backgroundColor: '#020c1b',
