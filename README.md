@@ -50,25 +50,25 @@ Make sure you have completed the [React Native - Environment Setup](https://reac
 These are the app screens in flow order to show how Arkive works:
 
 ### Screen 1
-![Screen 1](./1.png)
+<img src="./1.png" alt="Screen 1" width="320" />
 
 ### Screen 2
-![Screen 2](./2.png)
+<img src="./2.png" alt="Screen 2" width="320" />
 
 ### Screen 3
-![Screen 3](./3.png)
+<img src="./3.png" alt="Screen 3" width="320" />
 
 ### Screen 4
-![Screen 4](./4.png)
+<img src="./4.png" alt="Screen 4" width="320" />
 
 ### Screen 5
-![Screen 5](./5.png)
+<img src="./5.png" alt="Screen 5" width="320" />
 
 ### Screen 6
-![Screen 6](./6.png)
+<img src="./6.png" alt="Screen 6" width="320" />
 
 ### Screen 7
-![Screen 7](./7.png)
+<img src="./7.png" alt="Screen 7" width="320" />
 
 ### Screen 8
-![Screen 8](./8.png)
+<img src="./8.png" alt="Screen 8" width="320" />
