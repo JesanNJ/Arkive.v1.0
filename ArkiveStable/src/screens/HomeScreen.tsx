@@ -155,8 +155,8 @@ const HomeScreen = ({
           <Text style={styles.sectionTitle}>Recent Files</Text>
 
           <ScrollView
-            style={{ maxHeight: 200 }}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
           >
             {uniqueFiles.length === 0 ? (
               <Text style={styles.emptyText}>No recent files</Text>
@@ -311,10 +311,12 @@ logoutText: {
 
   /* 🔥 THIS PUSHES HISTORY DOWN */
   historyWrapper: {
-    marginTop: 40,
+      flex: 1,
+      marginTop: 30,
   },
 
   historyCard: {
+    height: 490,// 🔥 ADD THIS
     marginHorizontal: 20,
     padding: 16,
     borderRadius: 22,
