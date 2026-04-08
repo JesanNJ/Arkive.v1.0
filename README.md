@@ -44,3 +44,31 @@ Always **check your installed package versions** before making changes or adding
 ### Prerequisites
 
 Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions before running the app.
+
+## App Screens (1 to 8)
+
+These are the app screens in flow order to show how Arkive works:
+
+### Screen 1
+![Screen 1](./1.png)
+
+### Screen 2
+![Screen 2](./2.png)
+
+### Screen 3
+![Screen 3](./3.png)
+
+### Screen 4
+![Screen 4](./4.png)
+
+### Screen 5
+![Screen 5](./5.png)
+
+### Screen 6
+![Screen 6](./6.png)
+
+### Screen 7
+![Screen 7](./7.png)
+
+### Screen 8
+![Screen 8](./8.png)
