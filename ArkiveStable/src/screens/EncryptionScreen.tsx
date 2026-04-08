@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { generateAndStoreKey } from '../services/encryptionService';
 import { encryptFileInChunks } from '../services/chunkEncryptionService';
-
 import { saveEncryptedFile } from '../services/fileService';
 
 type Props = {
@@ -27,60 +26,60 @@ const EncryptionScreen = ({ files, onComplete }: Props) => {
     processEncryption();
   }, []);
 
-const processEncryption = async () => {
-  try {
-    const key = await generateAndStoreKey();
-    let outputFiles: any[] = [];
+  const processEncryption = async () => {
+    try {
+      const key = await generateAndStoreKey();
+      let outputFiles: any[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
-      const path = await encryptFileInChunks(
-        file.uri,
-        key,
-        file.name,
-        (chunkPercent) => {
-          const overall = Math.round(
-            ((i / files.length) + (chunkPercent / 100 / files.length)) * 100
-          );
-          setProgress(overall);
-        }
-      );
+        const path = await encryptFileInChunks(
+          file.uri,
+          key,
+          file.name,
+          (chunkPercent) => {
+            const overall = Math.round(
+              ((i / files.length) + (chunkPercent / 100 / files.length)) * 100
+            );
+            setProgress(overall);
+          }
+        );
 
-      const encryptedFile = {
-  uri: 'file://' + path,
-  name: file.name + '.ark',
-  type: 'application/ark',
-  size: file.size,
-};
+        const encryptedFile = {
+          uri: 'file://' + path,
+          name: file.name + '.ark',
+          type: 'application/ark',
+          size: file.size,
+        };
 
-outputFiles.push(encryptedFile);
+        outputFiles.push(encryptedFile);
 
-// 🔥 ADD THIS (history storage)
-await addFileToHistory({
-  id: Date.now().toString(),
-  name: encryptedFile.name,
-  size: file.size || 0,
-  uri: encryptedFile.uri,
-  status: 'encrypted',
-  timestamp: Date.now(),
-});
+        await addFileToHistory({
+          id: Date.now().toString(),
+          name: encryptedFile.name,
+          size: file.size || 0,
+          uri: encryptedFile.uri,
+          status: 'encrypted',
+          timestamp: Date.now(),
+        });
 
-console.log("✅ Saved to history:", encryptedFile.name);
-    }
-
-    setTimeout(() => {
-      if (onComplete) {
-        onComplete(outputFiles);
-      } else {
-        console.log('❌ onComplete not passed');
+        console.log("✅ Saved to history:", encryptedFile.name);
       }
-    }, 500);
 
-  } catch (e) {
-    console.log('❌ Encryption Error:', e);
-  }
-};
+      setTimeout(() => {
+        if (onComplete) {
+          onComplete(outputFiles);
+        } else {
+          console.log('❌ onComplete not passed');
+        }
+      }, 500);
+
+    } catch (e) {
+      console.log('❌ Encryption Error:', e);
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       Animated.timing(fadeAnim, {
@@ -103,17 +102,22 @@ console.log("✅ Saved to history:", encryptedFile.name);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Encrypting 🔐</Text>
 
-      <Animated.Text style={[styles.message, { opacity: fadeAnim }]}>
-        {messages[index]}
-      </Animated.Text>
+      {/* 🔥 UI WRAPPED (ONLY CHANGE) */}
+      <View style={styles.card}>
+        <Text style={styles.title}>🔐 Encrypting</Text>
 
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${progress}%` }]} />
+        <Animated.Text style={[styles.message, { opacity: fadeAnim }]}>
+          {messages[index]}
+        </Animated.Text>
+
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progress}%` }]} />
+        </View>
+
+        <Text style={styles.percent}>{progress}%</Text>
       </View>
 
-      <Text style={styles.percent}>{progress}%</Text>
     </View>
   );
 };
@@ -127,25 +131,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    color: '#fff',
-    fontSize: 20,
+
+  /* 🔥 NEW UI CARD (NO LOGIC TOUCH) */
+  card: {
+    width: '85%',
+    padding: 24,
+    borderRadius: 24,
+
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+
+    alignItems: 'center',
   },
+
+  title: {
+    color: '#e6f1ff',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+
   message: {
     color: '#8892b0',
     marginVertical: 20,
+    textAlign: 'center',
   },
+
   progressBar: {
-    width: '80%',
-    height: 10,
+    width: '100%',
+    height: 12,
     backgroundColor: '#112240',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
+
   progressFill: {
     height: '100%',
-    backgroundColor: '#64ffda',
+    backgroundColor: '#17A697',
+    borderRadius: 10,
   },
+
   percent: {
-    color: '#64ffda',
-    marginTop: 10,
+    color: '#17A697',
+    marginTop: 12,
+    fontWeight: '600',
   },
 });

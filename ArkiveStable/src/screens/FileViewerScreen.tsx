@@ -1,3 +1,4 @@
+// SAME IMPORTS (UNCHANGED)
 import React, { useRef } from 'react';
 import {
   StyleSheet,
@@ -20,7 +21,6 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => 
   const flatListRef = useRef(null);
   const scrollX = useRef(new Animated.Value(initialIndex * width)).current;
 
-  // 📥 SAVE SINGLE
   const saveToDownloads = async (file) => {
     try {
       const dest = `${RNFS.DownloadDirectoryPath}/${file.name}`;
@@ -31,7 +31,6 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => 
     }
   };
 
-  // 📥 SAVE ALL
   const saveAllToDownloads = async () => {
     try {
       for (const file of files) {
@@ -56,96 +55,83 @@ const FileViewerScreen = ({ files, initialIndex = 0, onBack, onBackToHome }) => 
 
     const isArk = item.name.endsWith('.ark');
     const isImage =
-  type.startsWith('image/') ||
-  item.name.match(/\.(jpg|jpeg|png)$/i);
+      type.startsWith('image/') ||
+      item.name.match(/\.(jpg|jpeg|png)$/i);
 
-const isVideo =
-  type.startsWith('video/') ||
-  item.name.match(/\.(mp4|mov)$/i);
+    const isVideo =
+      type.startsWith('video/') ||
+      item.name.match(/\.(mp4|mov)$/i);
 
-const isPDF =
-  type.includes('pdf') ||
-  item.name.match(/\.pdf$/i);
+    const isPDF =
+      type.includes('pdf') ||
+      item.name.match(/\.pdf$/i);
 
     return (
       <View style={styles.page}>
 
-        {/* 🔥 TRUE CENTER (NOT FLEX 1 TRICK) */}
-        <View style={styles.centerBlock}>
+        {/* 🔥 MAIN PREVIEW CARD */}
+        <View style={styles.previewCard}>
 
           {isArk && (
-            <View style={styles.arkContainer}>
-              <Text style={styles.arkIcon}>🔐</Text>
-              <Text style={styles.arkText}>Encrypted .ark file</Text>
-            </View>
+            <>
+              <Text style={styles.icon}>🔐</Text>
+              <Text style={styles.title}>Encrypted File</Text>
+            </>
           )}
 
           {isImage && <Image source={{ uri }} style={styles.preview} resizeMode="contain" />}
           {isVideo && <Video source={{ uri }} style={styles.preview} controls />}
 
-       {isPDF && (
-  <View style={styles.noPreviewContainer}>
-    <Text style={styles.noPreviewIcon}>📄</Text>
-
-    <Text style={styles.noPreviewText}>
-      PDF preview not supported inside app
-    </Text>
-
-    <TouchableOpacity
-      style={styles.btn}
-      onPress={() => shareFile(item)}
-    >
-      <Text style={styles.btnText}>📂 Open PDF</Text>
-    </TouchableOpacity>
-  </View>
-)}
-
-
-
-        {/* FILE INFO */}
-       <View style={styles.info}>
-  <Text style={styles.fileName} numberOfLines={2}>
-    {item.name}
-  </Text>
-
-  <Text style={styles.fileMeta}>
-  {item.size
-    ? (() => {
-        const sizeNum = parseInt(item.size); // handles "75238 bytes"
-        if (isNaN(sizeNum)) return 'Unknown size';
-
-if (sizeNum > 1024 * 1024) {
-  return `${(sizeNum / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-return `${(sizeNum / 1024).toFixed(2)} KB`;
-      })()
-    : 'Unknown size'}
-</Text>
-</View>
-          {!isImage && !isVideo && !isPDF && !isArk && (
+          {isPDF && (
             <View style={styles.noPreviewContainer}>
-              <Text style={styles.noPreviewIcon}>📁</Text>
-              <Text style={styles.noPreviewText}>Preview not available</Text>
+              <Text style={styles.icon}>📄</Text>
+              <Text style={styles.noPreviewText}>
+                PDF preview not supported
+              </Text>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => shareFile(item)}>
+                <Text style={styles.secondaryText}>📂 Open PDF</Text>
+              </TouchableOpacity>
             </View>
           )}
 
+          {!isImage && !isVideo && !isPDF && !isArk && (
+            <View style={styles.noPreviewContainer}>
+              <Text style={styles.icon}>📁</Text>
+              <Text style={styles.noPreviewText}>Preview not available</Text>
+            </View>
+          )}
         </View>
 
-        {/* 🔥 INFO + ACTIONS (MOVED UP) */}
-        <View style={styles.bottomBlock}>
-          <Text style={styles.fileName}>{item.name}</Text>
-          
+        {/* 🔥 FILE INFO CARD */}
+        <View style={styles.infoCard}>
+          <Text style={styles.fileName} numberOfLines={2}>
+            {item.name}
+          </Text>
 
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.btn} onPress={() => saveToDownloads(item)}>
-              <Text style={styles.btnText}>📥 Save</Text>
-            </TouchableOpacity>
+          <Text style={styles.fileMeta}>
+            {item.size
+              ? (() => {
+                  const sizeNum = parseInt(item.size);
+                  if (isNaN(sizeNum)) return 'Unknown size';
 
-            <TouchableOpacity style={styles.btn} onPress={() => shareFile(item)}>
-              <Text style={styles.btnText}>☁️ Share</Text>
-            </TouchableOpacity>
-          </View>
+                  if (sizeNum > 1024 * 1024) {
+                    return `${(sizeNum / (1024 * 1024)).toFixed(2)} MB`;
+                  }
+                  return `${(sizeNum / 1024).toFixed(2)} KB`;
+                })()
+              : 'Unknown size'}
+          </Text>
+        </View>
+
+        {/* 🔥 ACTION BUTTONS */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => saveToDownloads(item)}>
+            <Text style={styles.primaryText}>📥 Save</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => shareFile(item)}>
+            <Text style={styles.primaryText}>☁️ Share</Text>
+          </TouchableOpacity>
         </View>
 
       </View>
@@ -155,7 +141,7 @@ return `${(sizeNum / 1024).toFixed(2)} KB`;
   return (
     <View style={styles.container}>
 
-      {/* 🔥 HEADER */}
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack}>
           <Text style={styles.back}>← Back</Text>
@@ -164,21 +150,18 @@ return `${(sizeNum / 1024).toFixed(2)} KB`;
         <Text style={styles.headerTitle}>Preview</Text>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerBtn} onPress={onBackToHome}>
-            <Text style={styles.homeIcon}>🏠</Text>
-            <Text style={styles.homeText}>Home</Text>
+          <TouchableOpacity onPress={onBackToHome}>
+            <Text style={styles.home}>🏠</Text>
           </TouchableOpacity>
 
           {files.length > 1 && (
-            <TouchableOpacity style={styles.headerBtn} onPress={saveAllToDownloads}>
-              <Text style={styles.homeIcon}>📥</Text>
-              <Text style={styles.homeText}>All</Text>
+            <TouchableOpacity onPress={saveAllToDownloads}>
+              <Text style={styles.home}>📥</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* 🔥 SWIPE VIEW */}
       <Animated.FlatList
         ref={flatListRef}
         data={files}
@@ -200,7 +183,7 @@ return `${(sizeNum / 1024).toFixed(2)} KB`;
         scrollEventThrottle={16}
       />
 
-      {/* 🔥 DOTS */}
+      {/* DOTS */}
       <View style={styles.pagination}>
         {files.map((_, index) => {
           const inputRange = [
@@ -216,10 +199,7 @@ return `${(sizeNum / 1024).toFixed(2)} KB`;
           });
 
           return (
-            <Animated.View
-              key={index}
-              style={[styles.dot, { width: dotWidth }]}
-            />
+            <Animated.View key={index} style={[styles.dot, { width: dotWidth }]} />
           );
         })}
       </View>
@@ -229,7 +209,6 @@ return `${(sizeNum / 1024).toFixed(2)} KB`;
 };
 
 export default FileViewerScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -239,130 +218,129 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(100,255,218,0.1)',
+    padding: 14,
+    justifyContent: 'space-between',
   },
 
   back: {
     color: '#64ffda',
-    fontSize: 15,
+    fontSize: 14,
+  },
+
+  home: {
+    color: '#64ffda',
+    fontSize: 18,
   },
 
   headerTitle: {
     color: '#fff',
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 16,
     fontWeight: '600',
+    fontSize: 16,
   },
 
   headerRight: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-
-  headerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-
-  homeIcon: {
-    fontSize: 14,
-    color: '#64ffda',
-  },
-
-  homeText: {
-    color: '#64ffda',
-    fontSize: 12,
-    fontWeight: '600',
+    gap: 12,
   },
 
   page: {
     width,
-    height: height * 0.8,
     alignItems: 'center',
   },
 
-  // 🔥 REAL CENTER
-  centerBlock: {
-    position: 'absolute',
-    top: height * 0.2,
-    alignItems: 'center',
+  /* 🔥 MAIN PREVIEW CARD */
+  previewCard: {
+    marginTop: 20,
+    width: width * 0.9,
+    height: 260,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
+    alignItems: 'center',
   },
 
   preview: {
-    width: width * 0.9,
-    height: width * 0.9,
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
 
-  arkContainer: {
-    alignItems: 'center',
+  icon: {
+    fontSize: 50,
   },
 
-  arkIcon: {
-    fontSize: 70,
-  },
-
-  arkText: {
-    color: '#64ffda',
-    fontSize: 18,
+  title: {
+    color: '#17A697',
     marginTop: 10,
+    fontSize: 14,
   },
 
   noPreviewContainer: {
     alignItems: 'center',
   },
 
-  noPreviewIcon: {
-    fontSize: 50,
-  },
-
   noPreviewText: {
     color: '#8892b0',
+    marginTop: 10,
+    textAlign: 'center',
   },
 
-  // 🔥 MOVED UP
-  bottomBlock: {
-    position: 'absolute',
-    bottom: 80,
-    alignItems: 'center',
+  secondaryBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#112240',
+  },
+
+  secondaryText: {
+    color: '#fff',
+  },
+
+  /* 🔥 FILE INFO CARD */
+  infoCard: {
+    marginTop: 20,
+    width: width * 0.9,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   fileName: {
     color: '#fff',
-    fontSize: 15,
-    textAlign: 'center',
+    fontSize: 14,
   },
 
   fileMeta: {
     color: '#8892b0',
-    fontSize: 12,
     marginTop: 4,
+    fontSize: 12,
   },
 
-  actions: {
+  /* 🔥 BUTTONS */
+  actionRow: {
     flexDirection: 'row',
-    marginTop: 16,
     gap: 12,
+    marginTop: 20,
   },
 
-  btn: {
-    backgroundColor: '#1E7A85',
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 12,
+  primaryBtn: {
+    backgroundColor: '#17A697',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14,
   },
 
-  btnText: {
+  primaryText: {
     color: '#fff',
     fontWeight: '600',
   },
 
+  /* 🔥 DOTS */
   pagination: {
     position: 'absolute',
     bottom: 30,
