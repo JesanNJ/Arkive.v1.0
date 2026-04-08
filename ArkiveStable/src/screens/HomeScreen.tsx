@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// SAME IMPORTS (unchanged)
 import { getStoredFiles } from '../services/storageService';
 import React, { useEffect, useState } from 'react';
 import {
@@ -8,40 +8,46 @@ import {
   Dimensions,
   TouchableOpacity,
   StatusBar,
-  Alert,
   Image,
+  ScrollView,
+  Alert,
 } from 'react-native';
 
 import DocumentPicker from 'react-native-document-picker';
 import LoginBackground from '../components/LoginBackground';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { width } = Dimensions.get('window');
-
-
-type Props = {
-  onGoToEncryption: (files: any) => void;
-  onGoToDecryption: (files: any) => void;   // ✅ ADD THIS
-  onGoToViewer: (files: any) => void;       // ✅ ADD THIS
-  user: {
-    name: string;
-    photo?: string;
-  };
-  token?: string | null;
-  onLogout: () => void;
-};
 
 const HomeScreen = ({
   onGoToEncryption,
   onGoToDecryption,
   onGoToViewer,
   user,
-  token,
-  onLogout
-}: Props) => {
-const handleFilePress = (file) => {
-  console.log('CLICKED FILE:', file);
+  onLogout,
+}) => {
 
+  const [historyFiles, setHistoryFiles] = useState([]);
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    const files = await getStoredFiles();
+    setHistoryFiles(files);
+  };
+
+  const uniqueFiles = Object.values(
+    historyFiles.reduce((acc, file) => {
+      const baseName = file.name.replace('.ark', '');
+      if (!acc[baseName] || acc[baseName].timestamp < file.timestamp) {
+        acc[baseName] = file;
+      }
+      return acc;
+    }, {})
+  );
+
+  const handleFilePress = (file) => {
   if (file?.status === 'encrypted') {
     Alert.alert(
       'Encrypted File',
@@ -62,7 +68,7 @@ const handleFilePress = (file) => {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Open',
-          onPress: () => onGoToViewer([file]), // ✅ THIS MUST USE DECRYPTED FILE
+          onPress: () => onGoToViewer([file]),
         },
         {
           text: 'Re-encrypt',
@@ -72,45 +78,7 @@ const handleFilePress = (file) => {
     );
   }
 };
-  const [historyFiles, setHistoryFiles] = useState([]);
-  const uniqueFiles = Object.values(
-  historyFiles.reduce((acc, file) => {
-    const baseName = file.name.replace('.ark', '');
 
-    if (
-      !acc[baseName] ||
-      acc[baseName].timestamp < file.timestamp
-    ) {
-      acc[baseName] = file;
-    }
-
-    return acc;
-  }, {})
-);
-  const loadHistory = async () => {
-  const files = await getStoredFiles();
-  setHistoryFiles(files);
-  console.log("History:", files); // temporary debug
-};
-useEffect(() => {
-  loadHistory();
-}, []);
- const handleLogout = () => {
-  onLogout(); // AppNavigator handles everything
-};
-  // 🔥 Greeting logic
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
-  };
-
-  // 🔥 User processing
-  const firstName = user?.name?.split(' ')[0] || 'User';
-  const firstLetter = user?.name?.charAt(0)?.toUpperCase() || 'U';
-
-  // 🔥 File picker
   const pickFile = async () => {
     try {
       const result = await DocumentPicker.pick({
@@ -119,13 +87,18 @@ useEffect(() => {
       });
 
       onGoToEncryption(result);
-
-    } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        Alert.alert('Error picking file');
-      }
-    }
+    } catch (err) {}
   };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  const firstName = user?.name?.split(' ')[0] || 'User';
+  const firstLetter = user?.name?.charAt(0)?.toUpperCase() || 'U';
 
   return (
     <View style={styles.container}>
@@ -136,81 +109,99 @@ useEffect(() => {
         <LoginBackground />
       </View>
 
-      {/* Overlay */}
       <View style={styles.overlay} />
 
- {/* 🔥 GLASS HEADER */}
-<View style={styles.headerGlass}>
-  <Text style={styles.appName}>Arkive</Text>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.appName}>Arkive</Text>
 
-  <View style={styles.userRow}>
-    {user?.photo ? (
-      <Image source={{ uri: user.photo }} style={styles.avatarImage} />
-    ) : (
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{firstLetter}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          
+          {/* 🚪 LOGOUT ICON */}
+          <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
+  <Text style={styles.logoutText}>Logout</Text>
+</TouchableOpacity>
+
+          {/* Avatar */}
+          {user?.photo ? (
+            <Image source={{ uri: user.photo }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{firstLetter}</Text>
+            </View>
+          )}
+        </View>
       </View>
-    )}
-    <Text style={styles.username}>{firstName}</Text>
-    
-    {/* 🔥 ADD LOGOUT BUTTON */}
-    <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-      <Text style={styles.logoutText}>Logout</Text>
-    </TouchableOpacity>
-  </View>
-</View>
 
-      {/* 🔥 GREETING */}
-      <View style={styles.greetingBox}>
+      {/* MAIN CARD */}
+      <View style={styles.mainCard}>
         <Text style={styles.greeting}>
           {getGreeting()}, {firstName} 👋
         </Text>
-      </View>
 
-      {/* 🔥 GLASS UPLOAD BOX */}
-      <View style={styles.uploadGlass}>
-        <Text style={styles.sectionTitle}>Secure Upload</Text>
+        <Text style={styles.subText}>
+          Your vault is secure
+        </Text>
 
-        
-
-        <TouchableOpacity style={styles.bigBtn} onPress={pickFile}>
-          <Text style={styles.bigBtnText}>Select File / Files</Text>
+        <TouchableOpacity style={styles.uploadBtn} onPress={pickFile}>
+          <Text style={styles.uploadText}>Upload Files</Text>
         </TouchableOpacity>
-
-        {/* 🔐 AES NOTE */}
-        <Text style={styles.aesNote}>
-          Your files are protected using AES encryption — secured on your device before upload.
-        </Text>
       </View>
-      <View style={styles.historyGlass}>
-  <Text style={styles.sectionTitle}>Recent Files</Text>
 
-  {uniqueFiles.length === 0 ? (
-    <Text style={styles.emptyText}>No recent files</Text>
-  ) : (
-    uniqueFiles.slice(0, 5).map((file, index) => (
-      <TouchableOpacity
-        key={index}
-        style={styles.fileItem}
-        onPress={() => handleFilePress(file)}
-      >
-        <Text style={styles.fileName} numberOfLines={1}>
-  {file.name}
-</Text>
-        <Text style={styles.fileStatus}>
-          {file.status === 'encrypted' ? '🔒 Encrypted' : '📂 Decrypted'}
-        </Text>
-      </TouchableOpacity>
-    ))
-  )}
-</View>
-      {/* 🔥 FOOTER */}
+      {/* 🔥 PUSH RECENT FILES DOWN */}
+      <View style={styles.historyWrapper}>
+
+        <View style={styles.historyCard}>
+          <Text style={styles.sectionTitle}>Recent Files</Text>
+
+          <ScrollView
+            style={{ maxHeight: 200 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {uniqueFiles.length === 0 ? (
+              <Text style={styles.emptyText}>No recent files</Text>
+            ) : (
+              uniqueFiles.slice(0, 8).map((file, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.fileItem}
+                  onPress={() => handleFilePress(file)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={{ marginRight: 8 }}>
+                    {file.status === 'encrypted' ? '🔐' : '📄'}
+                  </Text>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.fileName} numberOfLines={1}>
+                      {file.name}
+                    </Text>
+
+                    <Text style={styles.fileMeta}>
+                      {file.size}
+                    </Text>
+                  </View>
+
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {file.status === 'encrypted'
+                        ? '🔐 Encrypted'
+                        : '📂 Decrypted'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </View>
+
+      </View>
+
+      {/* FOOTER */}
       <View style={styles.footer}>
-        <Text style={styles.quote}>Your legacy, encrypted.</Text>
-        <Text style={styles.footerText}>
-          © 2026 Arkive. All rights reserved.
-        </Text>
+        <Text style={styles.footerText}>© 2026 Arkive • Secure Document Vault</Text>
       </View>
+
     </View>
   );
 };
@@ -218,44 +209,6 @@ useEffect(() => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  historyGlass: {
-  marginTop: 20,
-  marginHorizontal: 20,
-  paddingVertical: 20,
-  paddingHorizontal: 16,
-  borderRadius: 25,
-
-  backgroundColor: 'rgba(255,255,255,0.05)',
-  borderWidth: 1,
-  borderColor: 'rgba(100,255,218,0.15)',
-},
-
-fileItem: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 12,
-  paddingVertical: 8,
-  borderBottomWidth: 0.5,
-  borderBottomColor: 'rgba(255,255,255,0.08)',
-},
-
-fileName: {
-  color: '#e6f1ff',
-  fontSize: 14,
-  flex: 1,              // 🔥 THIS FIXES ALIGNMENT
-  marginRight: 10,
-},
-
-fileStatus: {
-  color: '#64ffda',
-  fontSize: 12,
-  fontWeight: '600',
-},
-emptyText: {
-  color: '#8892b0',
-  marginTop: 10,
-},
   container: {
     flex: 1,
     backgroundColor: '#020c1b',
@@ -263,150 +216,171 @@ emptyText: {
 
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10,25,47,0.25)',
+    backgroundColor: 'rgba(10,25,47,0.3)',
   },
 
-  /* 🔥 HEADER */
-  headerGlass: {
-    marginTop: 60,
+  header: {
+    marginTop: 50,
     marginHorizontal: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderRadius: 40,
+    padding: 14,
+    borderRadius: 20,
 
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
 
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(100,255,218,0.2)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   appName: {
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '800',
     color: '#e6f1ff',
   },
 
-  userRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
   avatar: {
-    backgroundColor: '#64ffda',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    backgroundColor: '#17A697',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 6,
   },
+  logoutBtn: {
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 12,
+  backgroundColor: 'rgba(255,255,255,0.05)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.1)',
+},
 
+logoutText: {
+  color: '#64ffda',
+  fontSize: 12,
+  fontWeight: '600',
+},
   avatarText: {
-    color: '#0a192f',
+    color: '#000',
     fontWeight: 'bold',
   },
 
   avatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 6,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
 
-  username: {
-    color: '#e6f1ff',
-    fontWeight: '600',
-  },
-
-  /* 🔥 GREETING */
-  greetingBox: {
+  mainCard: {
     marginTop: 25,
-    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    padding: 20,
+    borderRadius: 22,
+
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   greeting: {
     color: '#e6f1ff',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '700',
-    letterSpacing: 0.5,
-    lineHeight: 32,
   },
 
-  /* 🔥 UPLOAD BOX */
-  uploadGlass: {
-    marginTop: 40,
-    marginHorizontal: 20,
-    paddingVertical: 30,
-    borderRadius: 30,
+  subText: {
+    color: '#8892b0',
+    marginTop: 6,
+    marginBottom: 20,
+  },
+
+  uploadBtn: {
+    backgroundColor: '#17A697',
+    paddingVertical: 16,
+    borderRadius: 18,
     alignItems: 'center',
+  },
+
+  uploadText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+
+  /* 🔥 THIS PUSHES HISTORY DOWN */
+  historyWrapper: {
+    marginTop: 40,
+  },
+
+  historyCard: {
+    marginHorizontal: 20,
+    padding: 16,
+    borderRadius: 22,
 
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(100,255,218,0.15)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
 
   sectionTitle: {
     color: '#e6f1ff',
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 16,
+    marginBottom: 10,
   },
 
-  bigBtn: {
-    backgroundColor: '#1E7A85',
-    paddingVertical: 20,
-    paddingHorizontal: 50,
-    borderRadius: 18,
+  fileItem: {
+    marginTop: 10,
+    marginBottom: 8,
+    padding: 14,
+    borderRadius: 16,
+
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
-  bigBtnText: {
+  fileName: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 14,
   },
 
-  aesNote: {
+  fileMeta: {
     color: '#8892b0',
     fontSize: 12,
-    marginTop: 15,
-    textAlign: 'center',
-    paddingHorizontal: 20,
+    marginTop: 2,
   },
 
-  /* 🔥 FOOTER */
+  badge: {
+    backgroundColor: '#17A697',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  emptyText: {
+    color: '#8892b0',
+    marginTop: 10,
+  },
+
   footer: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 10,
     alignSelf: 'center',
   },
 
-  quote: {
-    color: '#64ffda',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-
   footerText: {
-    color: '#8892b0',
-    fontSize: 12,
-    textAlign: 'center',
+    color: '#555',
+    fontSize: 10,
   },
-
-  logoutBtn: {
-  marginLeft: 12,
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 8,
-  backgroundColor: 'rgba(255,100,100,0.2)',
-  borderWidth: 1,
-  borderColor: 'rgba(255,100,100,0.3)',
-},
-
-logoutText: {
-  color: '#ff6b6b',
-  fontSize: 12,
-  fontWeight: '600',
-},
 });
