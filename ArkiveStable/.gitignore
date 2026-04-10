@@ -72,3 +72,12 @@ android/build/
 *.log
 package-lock.json
 yarn.lock
+
+# Keystore (CRITICAL)
+android/app/arkive-release.keystore
+
+# Password file (you created this earlier)
+android/app/arkive_keystore_password
+
+# Gradle properties (contains passwords)
+android/gradle.properties
